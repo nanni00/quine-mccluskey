@@ -1,0 +1,116 @@
+#include "QMC.h"
+
+void DeleteVett_Implic(size_t n_implic, Implic *v)
+{
+	for (size_t i = 0; i < n_implic; ++i) {
+		free(v[i].index);
+		free(v[i].config);
+	}
+	free(v);
+}
+
+void ScriviImplicante(size_t n_implic, size_t *general_n, Implic *v, FILE *f)
+{
+	fprintf(f, "\n");
+	for (unsigned i = 0; i < n_implic; ++i) {
+		for (int j = general_n[0] - 1; j >= 0; --j) {
+			char z = v[i].config[j];
+			if (z == 1)
+				fprintf(f, "1 ");
+			else if (z == 8)
+				fprintf(f, "0 ");
+			else
+				fprintf(f, "- ");
+		}
+		fprintf(f, "\t");
+		/* Non stampa anche le indifferenze */
+		for (unsigned j = 0; j < general_n[6]; ++j) {
+			if (v[i].index[j] == 2) //|| v[i].index[j] == 1) 
+				fprintf(f, "%d, ", j);			
+		}
+		fprintf(f, "\n");
+	}
+}
+
+void QuickSort(size_t *v, int first, int last)
+{
+	if (first < last) {
+		int i, j, pivot;
+		i = first;
+		j = last;
+		pivot = v[(first + last) / 2];
+		do {
+			while (v[i] < pivot) ++i;
+			while (v[j] > pivot) --j;
+			if (i <= j) {
+				size_t tmp = v[i];
+				v[i] = v[j];
+				v[j] = tmp;
+				++i;	--j;
+			}
+		} while (i <= j);
+		QuickSort(v, first, j);
+		QuickSort(v, i, last);
+	}
+}
+
+/* 
+ * Usando un ptr a char per la configurazione nasce un dilemma: preservare il concetto di 0-terminato 
+ * sostituendo allo 0 solito un valore a caso come 8? 
+ * O mantenere lo 0 nelle configurazioni creando delle stringhe ad es. 8-terminate?
+ * Per ora cambiamo lo 0 dentro le configurazioni.
+ */
+int FindConfig_nHamming(size_t i, size_t n_var, char *i_config)
+{
+	int i_n_Hamming = 0;
+	for (int j = n_var - 1; j >= 0; --j) {
+		if (i - pow(2, j) >= 0) {
+			i_config[j] = 1;
+			i_n_Hamming++;
+			i -= pow(2, j);
+		}
+		else
+			i_config[j] = 8;
+	}
+	i_config[n_var] = 0;
+	return i_n_Hamming;
+}
+
+Implic *leggiMintermini(size_t *index, size_t *mintermini, size_t *general_n)
+{
+	Implic *v_mintermini = malloc(general_n[3] * sizeof(Implic));
+
+	if (general_n[3] != 0 && index != NULL) {
+		for (size_t i = 0; i < general_n[3]; ++i) {
+			
+			size_t *i_index = calloc(general_n[6], sizeof(size_t));
+
+			char *i_config = calloc((general_n[0] + 1), sizeof(char));
+			v_mintermini[i].n_Hamming = FindConfig_nHamming(index[i], general_n[0], i_config);
+			v_mintermini[i].config = i_config;
+
+			/* 
+			 * Nel vettore index di ogni implicante:
+			 *	--> se index[i] == 0 allora index[i] è un maxtermine
+			 *	--> se index[i] == 1 allora index[i] è una indifferenza
+			 *	--> se index[i] == 2 allora index[i] è un mintermine 
+			 *
+			 *	Se index[i] è un mintermine allora il relativo n_precedenti è settato a 1
+			 *	altrimenti a 0.
+			 */
+			if (mintermini[index[i]] == 1) {
+				v_mintermini[i].n_precedenti = 1;
+				i_index[index[i]] = 2;
+			}
+			else {
+				v_mintermini[i].n_precedenti = 0;
+				i_index[index[i]] = 1;
+			}		
+
+			v_mintermini[i].index = i_index;
+		}
+	}
+
+	return v_mintermini;
+}
+
