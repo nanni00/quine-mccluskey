@@ -1,6 +1,6 @@
 #include "QMC.h"
 
-void DeleteVett_Implic(size_t n_implic, Implic *v)
+void deleteImplicantsVector(size_t n_implic, Implic *v)
 {
 	for (size_t i = 0; i < n_implic; ++i) {
 		free(v[i].index);
@@ -9,7 +9,7 @@ void DeleteVett_Implic(size_t n_implic, Implic *v)
 	free(v);
 }
 
-void ScriviImplicante(size_t n_implic, size_t *general_n, Implic *v, FILE *f)
+void writeImplicant(size_t n_implic, const size_t *general_n, Implic *v, FILE *f)
 {
 	fprintf(f, "\n");
 	for (unsigned i = 0; i < n_implic; ++i) {
@@ -76,9 +76,9 @@ int FindConfig_nHamming(size_t i, size_t n_var, char *i_config)
 	return i_n_Hamming;
 }
 
-Implic *leggiMintermini(size_t *index, size_t *mintermini, size_t *general_n)
+Implic *readMinterms(size_t *index, const size_t *mintermini, size_t *general_n)
 {
-	Implic *v_mintermini = malloc(general_n[3] * sizeof(Implic));
+	Implic *v_minterms = malloc(general_n[3] * sizeof(Implic));
 
 	if (general_n[3] != 0 && index != NULL) {
 		for (size_t i = 0; i < general_n[3]; ++i) {
@@ -86,8 +86,8 @@ Implic *leggiMintermini(size_t *index, size_t *mintermini, size_t *general_n)
 			size_t *i_index = calloc(general_n[6], sizeof(size_t));
 
 			char *i_config = calloc((general_n[0] + 1), sizeof(char));
-			v_mintermini[i].n_Hamming = FindConfig_nHamming(index[i], general_n[0], i_config);
-			v_mintermini[i].config = i_config;
+            v_minterms[i].n_Hamming = FindConfig_nHamming(index[i], general_n[0], i_config);
+            v_minterms[i].config = i_config;
 
 			/* 
 			 * Nel vettore index di ogni implicante:
@@ -99,18 +99,18 @@ Implic *leggiMintermini(size_t *index, size_t *mintermini, size_t *general_n)
 			 *	altrimenti a 0.
 			 */
 			if (mintermini[index[i]] == 1) {
-				v_mintermini[i].n_precedenti = 1;
+                v_minterms[i].n_precedenti = 1;
 				i_index[index[i]] = 2;
 			}
 			else {
-				v_mintermini[i].n_precedenti = 0;
+                v_minterms[i].n_precedenti = 0;
 				i_index[index[i]] = 1;
-			}		
+			}
 
-			v_mintermini[i].index = i_index;
+            v_minterms[i].index = i_index;
 		}
 	}
 
-	return v_mintermini;
+	return v_minterms;
 }
 

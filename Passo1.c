@@ -1,9 +1,8 @@
 /* RICERCA IMPLICANTI PRIMI */
 
 #include "QMC.h"
-#define _CRT_SECURE_NO_WARNINGS
 
-Implic *CopiaVett_Implic(size_t n_var, size_t n_implic, Implic *v)
+Implic *copyImplicantsVector(size_t n_var, size_t n_implic, Implic *v)
 {
 	Implic *new_v = NULL;
 	if (v != NULL) {
@@ -24,7 +23,7 @@ Implic *CopiaVett_Implic(size_t n_var, size_t n_implic, Implic *v)
 }
 
 
-bool Ripetizione(size_t n_var, size_t n_implic, Implic *v)
+bool repetition(size_t n_implic, Implic *v)
 {
 	for (int k = 0; k < n_implic; ++k) {
 		if (strcmp(v[n_implic].config, v[k].config) == 0)
@@ -34,7 +33,7 @@ bool Ripetizione(size_t n_var, size_t n_implic, Implic *v)
 }
 
 /* Controllare che la distanza di Hamming effettiva sia 1 */
-int DistanzaHamming(char *config1, char *config2)
+int hammingDistance(const char *config1, const char *config2)
 {
 	int i = 0, d = 0;
 	while (config1[i] != 0 && d <= 1) {
@@ -60,24 +59,24 @@ int DistanzaHamming(char *config1, char *config2)
 	return d;
 }
 
-Implic *Passo1(size_t *general_n, size_t *indifferenze, Implic *mintermini, bool ShowWork)
+Implic *stepOne(size_t *general_n, size_t *indifferenze, Implic *mintermini, bool ShowWork)
 {
-	bool finito = false;
-	bool Implic_primo;
-	Implic *v_base = CopiaVett_Implic(general_n[0], general_n[3], mintermini);
+	bool finished = false;
+	bool primeImplicant;
+	Implic *v_base = copyImplicantsVector(general_n[0], general_n[3], mintermini);
 	Implic *v_next = NULL;
 
 	int i, j, k;
 	size_t n_implic_base = general_n[3], n_implic_next;
 
-	while (!finito) {
-		finito = true;
+	while (!finished) {
+        finished = true;
 		n_implic_next = 0;
 		v_next = NULL;
 
 		for (i = 0; i < n_implic_base; ++i) {
 
-			Implic_primo = true;
+            primeImplicant = true;
 			for (j = i + 1; j < n_implic_base; ++j) {	// confronto tra i-esimo e j-esimo implicante
 
 				/* 
@@ -88,9 +87,9 @@ Implic *Passo1(size_t *general_n, size_t *indifferenze, Implic *mintermini, bool
 				size_t z = abs(v_base[i].n_precedenti) + abs(v_base[j].n_precedenti);
 				if (z >= 1) {
 					if (abs(v_base[i].n_Hamming - v_base[j].n_Hamming) == 1) {
-						if (DistanzaHamming(v_base[i].config, v_base[j].config) == 1) {
-							finito = false;
-							Implic_primo = false;
+						if (hammingDistance(v_base[i].config, v_base[j].config) == 1) {
+                            finished = false;
+                            primeImplicant = false;
 
 							/* marchiare gli implicanti i e j */
 							if (v_base[i].n_precedenti > 0)	
@@ -114,7 +113,7 @@ Implic *Passo1(size_t *general_n, size_t *indifferenze, Implic *mintermini, bool
 							v_next[n_implic_next].config[general_n[0]] = 0;
 
 							/* Se c'è una ripetizione allora si elimina */
-							if (Ripetizione(general_n[0], n_implic_next, v_next)) {
+							if (repetition(n_implic_next, v_next)) {
 								free(v_next[n_implic_next].config);
 								v_next = realloc(v_next, n_implic_next * sizeof(Implic));
 							}
@@ -144,7 +143,7 @@ Implic *Passo1(size_t *general_n, size_t *indifferenze, Implic *mintermini, bool
 				}
 			}
 
-			if (Implic_primo && v_base[i].n_precedenti > 0) {		/* se l'implicante è già primo lo copio nel vettore */
+			if (primeImplicant && v_base[i].n_precedenti > 0) {		/* se l'implicante è già primo lo copio nel vettore */
 				v_next = realloc(v_next, (n_implic_next + 1) * sizeof(Implic));
 				
 				v_next[n_implic_next].n_Hamming = v_base[i].n_Hamming;
@@ -160,17 +159,17 @@ Implic *Passo1(size_t *general_n, size_t *indifferenze, Implic *mintermini, bool
 			}
 		}
 
-		if (!finito) {
+		if (!finished) {
 			if (ShowWork) {
-				ScriviImplicante(n_implic_next, general_n, v_next, stdout);
+                writeImplicant(n_implic_next, general_n, v_next, stdout);
 			}
-			v_base = CopiaVett_Implic(general_n[0], n_implic_next, v_next);
-			DeleteVett_Implic(n_implic_next - 1, v_next);
+			v_base = copyImplicantsVector(general_n[0], n_implic_next, v_next);
+            deleteImplicantsVector(n_implic_next - 1, v_next);
 			n_implic_base = n_implic_next;
 		}
 	}
 
-	DeleteVett_Implic(n_implic_base, v_base);
+    deleteImplicantsVector(n_implic_base, v_base);
 	general_n[4] = n_implic_next;
 
 	return v_next;

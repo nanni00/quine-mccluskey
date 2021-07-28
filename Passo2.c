@@ -10,34 +10,33 @@
 	 4 --> n_implicanti primi
 	 5 --> n_implicanti essenziali
 	 6 --> pow(2, n_variabili in ingresso)
-	 7 --> mintermine di indice più alto
+	 7 --> mintermine di indice piï¿½ alto
 */
 
-void StampaLinea(size_t *general_n)
+void printLine(const size_t *general_n)
 {
 	printf("\t");
 	for (size_t i = 0; i < general_n[1]; ++i)
 		printf("+-----");
 	printf("+\n");
-	return;
 }
 
-void StampaTabella(size_t *general_n, size_t *mintermini, Implic *primi)
+void printTable(size_t *general_n, const size_t *mintermini, Implic *primi)
 {
-	size_t i, j, k;
+	size_t i, j;
 	printf("\nTabella di Copertura:\n\n\t");
 	for (i = 0; i < general_n[7]; ++i) {
 		if (mintermini[i] == 1) {
-			if (i < 10) { printf("|    %d", i); }
-			else if (10 <= i && i < 100) { printf("|   %d", i); }
-			else if (100 <= i  && i < 1000) { printf("|  %d", i); }
-			else { printf("|%d", i); }
+			if (i < 10) { printf("|    %zu", i); }
+			else if (10 <= i && i < 100) { printf("|   %zu", i); }
+			else if (100 <= i  && i < 1000) { printf("|  %zu", i); }
+			else { printf("|%zu", i); }
 		}
 	}
 	printf("|\n");
 	for (i = 0; i < general_n[4]; ++i) {
-		StampaLinea(general_n);
-		printf("p%d\t", i);
+        printLine(general_n);
+		printf("p%zu\t", i);
 		for (j = 0; j < general_n[6]; ++j) {
 			if (mintermini[j] == 1) {
 				if (primi[i].index[j] != 2)
@@ -48,12 +47,11 @@ void StampaTabella(size_t *general_n, size_t *mintermini, Implic *primi)
 		}
 		printf("|\n");
 	}
-	StampaLinea(general_n);
+    printLine(general_n);
 
-	return;
 }
 
-int ContaPrimiScelti(int *vcurr, size_t n_primi)
+int countFirstChosen(const int *vcurr, size_t n_primi)
 {
 	int x = 0;
 	for (size_t j = 0; j < n_primi; ++j)
@@ -65,7 +63,7 @@ int ContaPrimiScelti(int *vcurr, size_t n_primi)
 	return x;
 }
 
-bool CoperturaTotale(int *vcurr, size_t *general_n, Implic *primi, size_t *mintermini)
+bool fullCoverage(int *vcurr, const size_t *general_n, Implic *primi, size_t *mintermini)
 {
 	size_t non_coperti = general_n[1], m = general_n[7];
 	size_t check_mint[1024] = { 0, };
@@ -89,7 +87,7 @@ bool CoperturaTotale(int *vcurr, size_t *general_n, Implic *primi, size_t *minte
 			printf("\n");
 			for (k = 0; k < general_n[7]; ++k)
 				if (check_mint[k] == 1)
-					printf("manca il mintermine %d\n", k);
+					printf("misses minterm %zu\n", k);
 		}
 	}
 
@@ -103,18 +101,18 @@ void BackTrack(int i, int *vcurr, int *vbest, size_t *general_n, Implic *primi, 
 	int x;
 	if (i == general_n[4]) {
 		if (sum >= general_n[1]) {
-			if ((x = ContaPrimiScelti(vcurr, general_n[4])) < general_n[5]) {
-				if (CoperturaTotale(vcurr, general_n, primi, mintermini)) {
+			if ((x = countFirstChosen(vcurr, general_n[4])) < general_n[5]) {
+				if (fullCoverage(vcurr, general_n, primi, mintermini)) {
 					memcpy(vbest, vcurr, general_n[4] * sizeof(int));
 
-					printf("\n\nPossibile soluzione trovata.\n\n");
+					printf("\n\nPossible solution found.\n\n");
 					general_n[5] = x;	/* aggiorno il numero di essenziali */
 				}
 			}
 		}
 		return;
 	}
-	if (vcurr[i] != 2) {			/* se vcurr[i] == 2 allora è già stato rilevato come essenziale e quindi va preso in ogni caso */
+	if (vcurr[i] != 2) {			/* se vcurr[i] == 2 allora Ã¨ giÃ  stato rilevato come essenziale e quindi va preso in ogni caso */
 		
 		vcurr[i] = 0;
 		BackTrack(i + 1, vcurr, vbest, general_n, primi, mintermini, sum);
@@ -125,57 +123,18 @@ void BackTrack(int i, int *vcurr, int *vbest, size_t *general_n, Implic *primi, 
 	else 
 		BackTrack(i + 1, vcurr, vbest, general_n, primi, mintermini, sum);
 
-	return;
 }
-
-void BTiterativo(int *vcurr, int *vbest, size_t *general_n, Implic *primi, size_t *mintermini)
-{
-	size_t i, j, k, sum = 0;
-	
-	for (i = 0; i < general_n[4]; ++i) {
-		for (j = 0; j < 2; ++j) {
-			vcurr[i] = j;
-			if (j == 1 && i < general_n[4]) {
-				sum += primi[i].n_precedenti;
-			}
-			
-			if (i == general_n[4]) {
-				if (sum >= general_n[1]) { 
-					if ((x = ContaPrimiScelti(vcurr, general_n[4])) < general_n[5]) {
-						if (CoperturaTotale(vcurr, general_n, primi, mintermini)) {
-							memcpy(vbest, vcurr, general_n[4] * sizeof(int));
-
-							printf("\n\nPossibile soluzione trovata.\n\n");
-							general_n[5] = x;	/* aggiorno il numero di essenziali */
-						}
-					}				
-				}
-			}		
-		}
-		
-		quando ridurre sum???????
-		
-	}
-	
-	
-	
-	
-	
-	
-	return;
-}
-
 
 
 /*
- * Si può fare una prima passata per applicare il Criterio di Essenzialità 
- * Il BackTracking con un numero di ramificazioni alto impiega molto tempo, così si eliminano alcuni rami 
- * Nel vettore 'mintermini' alla posizione i-esima se c'è 0 allora quel valore rientra nell'ON-set, altrimenti no 
+ * Si puï¿½ fare una prima passata per applicare il Criterio di Essenzialitï¿½ 
+ * Il BackTracking con un numero di ramificazioni alto impiega molto tempo, cosï¿½ si eliminano alcuni rami 
+ * Nel vettore 'mintermini' alla posizione i-esima se c'ï¿½ 0 allora quel valore rientra nell'ON-set, altrimenti no 
  */
-void CriterioEssenzialita(size_t *general_n, int *vcurr, int *vbest, size_t *mintermini, Implic *primi)
+void essentialityCriteria(size_t *general_n, int *vcurr, int *vbest, size_t *mintermini, Implic *primi)
 {
 	size_t i, j, pos_essenziale;
-	int s; /* --> indica quanti implicanti primi coprono l'i-esimo mintermine --> se s == 1 allora c'è un implicante essenziale */
+	int s; /* --> indica quanti implicanti primi coprono l'i-esimo mintermine --> se s == 1 allora c'ï¿½ un implicante essenziale */
 	for (i = 0; i < general_n[7]; ++i) {
 		if (mintermini[i] == 1) {
 			s = 0;
@@ -201,31 +160,30 @@ void CriterioEssenzialita(size_t *general_n, int *vcurr, int *vbest, size_t *min
 			}
 		}
 	}
-	return;
 }
 
 /* 
  * Si considerano due implicanti primi: se imp1.n_precedenti > imp2.n_predenti allora forse imp1 copre imp2 per il criterio di
  * dominanza di riga; 
  */
-void CriterioDominanzaRiga(size_t *general_n, Implic *primi)
+void rowDominanceCriteria(size_t *general_n, Implic *primi)
 {
 	size_t i, j, k;
 
 	for (i = 0; i < general_n[4]; ++i) {
 		int n_prec_i = primi[i].n_precedenti;
 
-		if (n_prec_i > 0) {		/* Se è negativo vuol dire che è già coperto e si può anche non controllare */
+		if (n_prec_i > 0) {		/* Se ï¿½ negativo vuol dire che ï¿½ giï¿½ coperto e si puï¿½ anche non controllare */
 			for (j = 0; j < general_n[4]; ++j) {
 				int n_prec_j = primi[j].n_precedenti;
-				if (i != j && n_prec_i >= n_prec_j && n_prec_j > 0) {	/* Come sopra, se negativo allora si può non controllare */
+				if (i != j && n_prec_i >= n_prec_j && n_prec_j > 0) {	/* Come sopra, se negativo allora si puï¿½ non controllare */
 
 					for (k = 0; k < general_n[7]; ++k) {
 						if (primi[i].index[k] == 2 && primi[j].index[k] == 2)
 							--n_prec_j;
 					}
 
-					if (n_prec_j == 0) {	/* Quindi primi[i] copriva tutti i mintermini di primi[j] e almeno 1 in più */
+					if (n_prec_j == 0) {	/* Quindi primi[i] copriva tutti i mintermini di primi[j] e almeno 1 in piï¿½ */
 						/* Si marchia n_precedenti con -1 --> alla fine con un controllo */
 						/* quelli con n_precedenti negativo saranno eliminati 			 */
 						primi[j].n_precedenti *= -1;
@@ -234,11 +192,10 @@ void CriterioDominanzaRiga(size_t *general_n, Implic *primi)
 			}
 		}
 	}
-	j = general_n[4];
-	for (i = 0; i < general_n[4]; ++i) {
+    for (i = 0; i < general_n[4]; ++i) {
 		if (primi[i].n_precedenti < 0) {
 			/* 
-			 * Se l'implicante primo è coperto da un altro, copiamo su di esso l'implicante nell'ultima 
+			 * Se l'implicante primo ï¿½ coperto da un altro, copiamo su di esso l'implicante nell'ultima 
 			 * posizione del vettore *primi, poi deallochiamo la memoria in questa posizione e decrementiamo
 			 * il numero degli implicanti primi; si applica la realloc una volta conclusa la funzione.
 			 */
@@ -254,16 +211,14 @@ void CriterioDominanzaRiga(size_t *general_n, Implic *primi)
 			--i;
 		}
 	}
-
-	return;
 }
 
 /*
  * Si costruisce un vettore che tiene traccia di quanti implicanti coprono l'i-esimo mintermine:
  * se il mintermine i ha tale numero minore del mintermine j allora si confrontano; se tutti gli implicanti che 
- * coprono mj coprono anche mi allora mj si può togliere.
+ * coprono mj coprono anche mi allora mj si puï¿½ togliere.
  */
-void CriterioDominanzaColonna(size_t *general_n, Implic *primi, size_t *mintermini)
+void columnDominanceCriteria(size_t *general_n, Implic *primi, size_t *mintermini)
 {
 	int i, j, k;
 	size_t n_coperture[1024] = { 0, };
@@ -282,7 +237,7 @@ void CriterioDominanzaColonna(size_t *general_n, Implic *primi, size_t *mintermi
 			for (j = 0; j < general_n[7]; ++j) {
 				if (i != j && mintermini[j] == 1) {
 					if (n_coperture[i] < n_coperture[j]) {
-						size_t ni = n_coperture[i], nj = n_coperture[j];
+						size_t ni = n_coperture[i];
 
 						for (k = 0; k < general_n[4]; ++k) {
 							if (primi[k].index[i] != 0 && primi[k].index[j] != 0) {
@@ -295,7 +250,7 @@ void CriterioDominanzaColonna(size_t *general_n, Implic *primi, size_t *mintermi
 						}
 
 						if (ni == 0) {
-							mintermini[j] = 2;	/* quindi il mintermine mj sarà di sicuro coperto nel momento in cui si copre mi */
+							mintermini[j] = 2;	/* quindi il mintermine mj sarï¿½ di sicuro coperto nel momento in cui si copre mi */
 							--general_n[1];
 						}
 					}
@@ -303,43 +258,41 @@ void CriterioDominanzaColonna(size_t *general_n, Implic *primi, size_t *mintermi
 			}
 		}
 	}
-
-	return;
 }
 
 
-Implic *Passo2(size_t *general_n, size_t *mintermini, Implic *primi, bool ShowWork)
+Implic *stepTwo(size_t *general_n, size_t *mintermini, Implic *primi, bool ShowWork)
 {
 	int i, j, k;
-	size_t x, tot_mint = general_n[1], non_coperti;
+	size_t tot_mint = general_n[1], non_coperti;
 
 	int *vcurr = calloc(general_n[4], sizeof(int));
 	int *vbest = calloc(general_n[4], sizeof(int));
 	i = 0;
-	
-	CriterioDominanzaRiga(general_n, primi);
+
+    rowDominanceCriteria(general_n, primi);
 	primi = realloc(primi, general_n[4] * sizeof(Implic));
 
 	if (ShowWork) {
-		printf("\nRiduzione implicanti con il criterio di dominanza per riga:\n");
-		ScriviImplicante(general_n[4], general_n, primi, stdout);
-		StampaTabella(general_n, mintermini, primi);
+		printf("\nImplicants reduction with row dominance criteria:\n");
+        writeImplicant(general_n[4], general_n, primi, stdout);
+        printTable(general_n, mintermini, primi);
 	}
 
-	CriterioDominanzaColonna(general_n, primi, mintermini);
+    columnDominanceCriteria(general_n, primi, mintermini);
 	if (ShowWork) {
-		printf("\nMintermini totali (con indifferenze):\t%d\n", general_n[3]);
-		printf("Mintermini totali (senza indifferenze):\t%d\n\n", tot_mint);
+		printf("\nTotal minterms (with dontcares):\t%zu\n", general_n[3]);
+		printf("Total minterms (without dontcares):\t%zu\n\n", tot_mint);
 		
-		printf("n_ mintermini coperti con il criterio di dominanza per colonna:\t%d\n", tot_mint - general_n[1]);
+		printf("n_ minterms covered with column dominance criteria:\t%llu\n", tot_mint - general_n[1]);
 	}
 
 	non_coperti = general_n[1];
-	CriterioEssenzialita(general_n, vcurr, vbest, mintermini, primi);
+    essentialityCriteria(general_n, vcurr, vbest, mintermini, primi);
 
 	if (ShowWork) {
-		printf("n_ mintermini coperti con il criterio di essenzialita':\t%d\n", non_coperti - general_n[1]);
-		printf("n_ mintermini rimanenti da coprire:\t%d\n", general_n[1]);
+		printf("n_ minterms covered with essentiality criteria:\t%llu\n", non_coperti - general_n[1]);
+		printf("n_ minterms still to cover:\t%zu\n", general_n[1]);
 		if (general_n[1] == 0)
 			printf("Riduzione alla forma minima completata.\n");
 		else
@@ -347,8 +300,8 @@ Implic *Passo2(size_t *general_n, size_t *mintermini, Implic *primi, bool ShowWo
 	}
 
 	
-	/* Se si è già arrivati a coprire interamente l'ON-set con i tre criteri non c'è bisogno 						*/
-	/* di considerare anche il BackTrack e il vettore vbest riporta già la configurazione di implicanti essenziali. */
+	/* Se si Ã¨ giÃ  arrivati a coprire interamente l'ON-set con i tre criteri non c'ï¿½ bisogno 						*/
+	/* di considerare anche il BackTrack e il vettore vbest riporta giï¿½ la configurazione di implicanti essenziali. */
 	if (general_n[1] != 0) {
 		general_n[5] = INT_MAX;
 		BackTrack(i, vcurr, vbest, general_n, primi, mintermini, 0);
@@ -361,7 +314,7 @@ Implic *Passo2(size_t *general_n, size_t *mintermini, Implic *primi, bool ShowWo
 		k = 0;
 		for (j = 0; j < general_n[4]; ++j) {
 			if (vbest[j] == 1 || vbest[j] == 2) {
-				x = essenziali[k].n_precedenti = primi[j].n_precedenti;
+                essenziali[k].n_precedenti = primi[j].n_precedenti;
 				essenziali[k].index = malloc(general_n[6] * sizeof(size_t));
 				memcpy(essenziali[k].index, primi[j].index, general_n[6] * sizeof(size_t));
 
