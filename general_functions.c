@@ -1,18 +1,34 @@
 #include "QMC.h"
 
-void deleteImplicantsVector(size_t n_implic, Implic *v)
+    /*
+       GENERAL_NUMBERS TABLE
+        0 --> number input variables
+        1 --> number minterms ON_SET (without dontcares)
+        2 --> number dontcares
+        3 --> number total minterms (with dontcares)
+        4 --> number first implicants
+        5 --> number essential implicants
+        6 --> 2^number-input-variables
+        7 --> minterm with higher index
+    */
+
+    /*
+     * int values for loops variables should not be converted into unsigned
+     */
+
+void deleteImplicantsVector(size_t numImplicants, Implicant *v)
 {
-	for (size_t i = 0; i < n_implic; ++i) {
+	for (size_t i = 0; i < numImplicants; ++i) {
 		free(v[i].index);
 		free(v[i].config);
 	}
 	free(v);
 }
 
-void writeImplicant(size_t n_implic, const size_t *general_n, Implic *v, FILE *f)
+void writeImplicant(size_t numImplicants, const size_t *general_n, Implicant *v, FILE *f)
 {
 	fprintf(f, "\n");
-	for (unsigned i = 0; i < n_implic; ++i) {
+	for (int i = 0; i < numImplicants; ++i) {
 		for (int j = general_n[0] - 1; j >= 0; --j) {
 			char z = v[i].config[j];
 			if (z == 1)
@@ -23,8 +39,8 @@ void writeImplicant(size_t n_implic, const size_t *general_n, Implic *v, FILE *f
 				fprintf(f, "- ");
 		}
 		fprintf(f, "\t");
-		/* Non stampa anche le indifferenze */
-		for (unsigned j = 0; j < general_n[6]; ++j) {
+
+		for (size_t j = 0; j < general_n[6]; ++j) {
 			if (v[i].index[j] == 2) //|| v[i].index[j] == 1) 
 				fprintf(f, "%d, ", j);			
 		}
@@ -76,9 +92,9 @@ int FindConfig_nHamming(size_t i, size_t n_var, char *i_config)
 	return i_n_Hamming;
 }
 
-Implic *readMinterms(size_t *index, const size_t *mintermini, size_t *general_n)
+Implicant *readMinterms(size_t *index, const size_t *minterms, size_t *general_n)
 {
-	Implic *v_minterms = malloc(general_n[3] * sizeof(Implic));
+	Implicant *v_minterms = malloc(general_n[3] * sizeof(Implicant));
 
 	if (general_n[3] != 0 && index != NULL) {
 		for (size_t i = 0; i < general_n[3]; ++i) {
@@ -98,7 +114,7 @@ Implic *readMinterms(size_t *index, const size_t *mintermini, size_t *general_n)
 			 *	Se index[i] è un mintermine allora il relativo n_precedenti è settato a 1
 			 *	altrimenti a 0.
 			 */
-			if (mintermini[index[i]] == 1) {
+			if (minterms[index[i]] == 1) {
                 v_minterms[i].n_precedenti = 1;
 				i_index[index[i]] = 2;
 			}
