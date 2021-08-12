@@ -90,7 +90,7 @@ Implicant *stepOne(size_t *general_n, Implicant *minterms, bool ShowWork)
 			for (j = i + 1; j < n_implic_base; ++j) {	// confronto tra i-esimo e j-esimo implicante
 
 				/* 
-				 * Se la somma di n_precedenti dell'i-esimo e del j-esimo implicante Ë 0 allora questi due non coprono
+				 * Se la somma di n_precedenti dell'i-esimo e del j-esimo implicante √® 0 allora questi due non coprono
 				 * un mintermine dell'ON-set e si possono trascurare; in caso contrario bisogna controllare se hanno Distanza
 				 * di Hamming pari a 1 e se sono anche compatibili.
 				 */
@@ -122,7 +122,7 @@ Implicant *stepOne(size_t *general_n, Implicant *minterms, bool ShowWork)
 							}
 							v_next[n_implic_next].config[general_n[0]] = 0;
 
-							/* Se c'Ë una ripetizione allora si elimina */
+							/* Se c'√® una ripetizione allora si elimina */
 							if (repetition(n_implic_next, v_next)) {
 								free(v_next[n_implic_next].config);
 								v_next = realloc(v_next, n_implic_next * sizeof(Implicant));
@@ -139,7 +139,7 @@ Implicant *stepOne(size_t *general_n, Implicant *minterms, bool ShowWork)
 									else if (v_base[j].index[k] != 0)
 										v_next[n_implic_next].index[k] = v_base[j].index[k];
 
-								/* Il numero di Hamming dell'implicante figlio Ë il minimo tra i */
+								/* Il numero di Hamming dell'implicante figlio √® il minimo tra i */
 								/* numeri di Hamming degli implicanti genitori. 				 */
 								if (v_base[i].n_Hamming > v_base[j].n_Hamming || v_base[j].n_Hamming < 0)
 									v_next[n_implic_next].n_Hamming = v_base[j].n_Hamming;
@@ -153,7 +153,7 @@ Implicant *stepOne(size_t *general_n, Implicant *minterms, bool ShowWork)
 				}
 			}
 
-			if (firstImplicant && v_base[i].n_precedenti > 0) {		/* se l'implicante Ë gi‡ primo lo copio nel vettore */
+			if (firstImplicant && v_base[i].n_precedenti > 0) {		/* se l'implicante √® gi√† primo lo copio nel vettore */
 				v_next = realloc(v_next, (n_implic_next + 1) * sizeof(Implicant));
 				
 				v_next[n_implic_next].n_Hamming = v_base[i].n_Hamming;
