@@ -1,4 +1,4 @@
-# quine-mccluskey-algorithm
+# Quine-McCluskey Algorithm
 A partial implementation of Quine-McCluskey algorithm
 
 It should work; with simple input values (max 100) result is checked by hand/online programs.
